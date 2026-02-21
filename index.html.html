@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0c10">
+<title>Задачи — DAO Group</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@700;900&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-msal-browser/3.10.0/msal-browser.min.js"></script>
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #13161f;
+  --surface2: #1a1e2a;
+  --surface3: #1f2436;
+  --border: #252b3b;
+  --border2: #2e3650;
+  --accent: #4f8ef7;
+  --accent-soft: rgba(79,142,247,0.12);
+  --green: #2dd4a0;
+  --green-soft: rgba(45,212,160,0.12);
+  --yellow: #f5c842;
+  --yellow-soft: rgba(245,200,66,0.12);
+  --red: #f75e5e;
+  --red-soft: rgba(247,94,94,0.12);
+  --text: #e2e8f5;
+  --text2: #a0aec0;
+  --muted: #5a6480;
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Unbounded', sans-serif;
+  --body: 'Mulish', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 30%, rgba(79,142,247,0.08) 0%, transparent 70%);
+}
+.login-logo {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--accent), #7c5ef7);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 32px rgba(79,142,247,0.25);
+}
+.login-title {
+  font-family: var(--head);
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.login-title span { color: var(--accent); }
+.login-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 40px; }
+.btn-login {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 32px;
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(79,142,247,0.3);
+}
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(79,142,247,0.4); }
+.btn-login:active { transform: translateY(0); }
+
+/* ── APP SCREEN ── */
+#appScreen { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+
+/* Header */
+.app-header {
+  padding: 16px 16px 0;
+  flex-shrink: 0;
+}
+.header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.header-title {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 900;
+}
+.header-title span { color: var(--accent); }
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 38px; height: 38px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: all 0.15s;
+}
+.icon-btn:active { background: var(--surface3); }
+
+/* Search */
+.search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 14px; pointer-events: none;
+}
+#searchInput {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 12px 11px 36px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#searchInput:focus { border-color: var(--accent); }
+#searchInput::placeholder { color: var(--muted); }
+
+/* Filters */
+.filters {
+  display: flex; gap: 6px;
+  padding-bottom: 12px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filters::-webkit-scrollbar { display: none; }
+.filter-btn {
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.filter-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* Stats bar */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 16px 12px;
+  flex-shrink: 0;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.stat-num { font-family: var(--mono); font-size: 18px; font-weight: 600; }
+.stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.stat.overdue .stat-num { color: var(--red); }
+.stat.wip .stat-num { color: var(--yellow); }
+.stat.done .stat-num { color: var(--green); }
+
+/* Task list */
+#taskList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 80px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Task card */
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.task-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border2);
+  border-radius: 3px 0 0 3px;
+}
+.task-card.prio-crit::before { background: var(--red); }
+.task-card.prio-high::before { background: var(--yellow); }
+.task-card.prio-med::before  { background: var(--accent); }
+.task-card.overdue { background: rgba(247,94,94,0.04); border-color: rgba(247,94,94,0.2); }
+.task-card:active { transform: scale(0.98); }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.card-title { font-size: 14px; font-weight: 700; line-height: 1.3; flex: 1; }
+.status-badge {
+  padding: 3px 9px; border-radius: 8px;
+  font-size: 10px; font-weight: 700;
+  white-space: nowrap; flex-shrink: 0;
+}
+.s-new     { background: var(--accent-soft); color: var(--accent); }
+.s-wip     { background: var(--yellow-soft); color: var(--yellow); }
+.s-done    { background: var(--green-soft);  color: var(--green); }
+.s-default { background: var(--surface3);    color: var(--text2); }
+
+.card-meta { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.card-meta-left { display: flex; align-items: center; gap: 10px; }
+.meta-item { display: flex; align-items: center; gap: 4px; }
+.prio-tag { font-size: 10px; font-weight: 700; }
+.prio-crit-tag { color: var(--red); }
+.prio-high-tag { color: var(--yellow); }
+
+/* Empty / loading */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted); font-size: 14px;
+}
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; gap: 8px; color: var(--muted); font-size: 13px;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 50%;
+  transform: translateX(50%);
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 28px;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(79,142,247,0.4);
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s;
+  z-index: 100;
+}
+.fab:active { transform: translateX(50%) scale(0.97); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none; align-items: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title {
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: none; height: 80px; }
+.form-select option { background: var(--surface2); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.btn-save {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.btn-save:active { opacity: 0.85; }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-delete {
+  width: 100%;
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(247,94,94,0.3);
+  border-radius: 12px;
+  padding: 12px;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.btn-delete:active { background: var(--red-soft); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+.toast.success { border-color: rgba(45,212,160,0.4); color: var(--green); }
+.toast.error   { border-color: rgba(247,94,94,0.4);  color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">📋</div>
+  <div class="login-title">DAO Group<br><span>Задачи</span></div>
+  <p class="login-sub">Войдите через Microsoft 365<br>чтобы видеть и управлять задачами</p>
+  <button class="btn-login" onclick="login()">
+    <span>🔐</span> Войти через Microsoft
+  </button>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="app-header">
+    <div class="header-top">
+      <div class="header-title">📋 <span>Задачи</span></div>
+      <div class="header-actions">
+        <div class="icon-btn" onclick="loadTasks()" title="Обновить">🔄</div>
+        <div class="icon-btn" onclick="logout()" title="Выйти">🚪</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="Поиск по теме..." oninput="renderTasks()">
+    </div>
+    <div class="filters">
+      <button class="filter-btn active" data-filter="Все" onclick="setFilter(this)">Все</button>
+      <button class="filter-btn" data-filter="Новая" onclick="setFilter(this)">Новая</button>
+      <button class="filter-btn" data-filter="В работе" onclick="setFilter(this)">В работе</button>
+      <button class="filter-btn" data-filter="Выполнено" onclick="setFilter(this)">Выполнено</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat overdue">
+      <div class="stat-num" id="statOverdue">0</div>
+      <div class="stat-label">Просрочено</div>
+    </div>
+    <div class="stat wip">
+      <div class="stat-num" id="statWip">0</div>
+      <div class="stat-label">В работе</div>
+    </div>
+    <div class="stat done">
+      <div class="stat-num" id="statDone">0</div>
+      <div class="stat-label">Выполнено</div>
+    </div>
+  </div>
+
+  <div id="taskList">
+    <div class="loading"><div class="spinner"></div> Загрузка...</div>
+  </div>
+
+  <button class="fab" onclick="openModal()">＋ Новая задача</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Новая задача</div>
+
+    <input type="hidden" id="taskId">
+
+    <div class="form-group">
+      <label class="form-label">ТЕМА ОБРАЩЕНИЯ *</label>
+      <input class="form-input" id="fTitle" placeholder="Введите тему...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">ОПИСАНИЕ</label>
+      <textarea class="form-textarea" id="fDesc" placeholder="Описание задачи..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">СТАТУС</label>
+        <select class="form-select" id="fStatus">
+          <option>Новая</option>
+          <option>В работе</option>
+          <option>Выполнено</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ПРИОРИТЕТ</label>
+        <select class="form-select" id="fPriority">
+          <option>Критично</option>
+          <option>Высокий</option>
+          <option>Средний</option>
+          <option>Низкий</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ДАТА НАЧАЛА</label>
+        <input class="form-input" id="fStartDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ДАТА ОКОНЧАНИЯ</label>
+        <input class="form-input" id="fDueDate" type="date">
+      </div>
+    </div>
+
+    <button class="btn-save" id="btnSave" onclick="saveTask()">💾 Сохранить</button>
+    <button class="btn-delete" id="btnDelete" style="display:none" onclick="deleteTask()">🗑 Удалить задачу</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const CONFIG = {
+  clientId: 'ac5e8b66-d93b-426c-83fc-34d579bc5718',
+  tenantId: '98f669c9-3c30-4d33-9690-94a178c68711',
+  siteId:   '8e777b43-b4c1-414c-93bf-17171ece7f4d',
+  listId:   '6fc6997a-cbbd-48c7-9758-938faa1c34f9',
+};
+
+// ── MSAL SETUP ──
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.clientId,
+    authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: window.location.href.split('?')[0],
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+const scopes = ['Sites.ReadWrite.All'];
+
+let allTasks = [];
+let currentFilter = 'Все';
+
+// ── AUTH ──
+async function login() {
+  try {
+    await msalInstance.initialize();
+    const result = await msalInstance.loginPopup({ scopes });
+    msalInstance.setActiveAccount(result.account);
+    showApp();
+    loadTasks();
+  } catch(e) {
+    showToast('Ошибка входа: ' + e.message, 'error');
+  }
+}
+
+async function getToken() {
+  const account = msalInstance.getActiveAccount();
+  if (!account) throw new Error('Не авторизован');
+  const result = await msalInstance.acquireTokenSilent({ scopes, account });
+  return result.accessToken;
+}
+
+function logout() {
+  msalInstance.logoutPopup();
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+}
+
+// ── API ──
+const BASE = `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/lists/${CONFIG.listId}`;
+
+async function apiGet(url) {
+  const token = await getToken();
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function apiPost(url, body) {
+  const token = await getToken();
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function apiPatch(url, body) {
+  const token = await getToken();
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.status === 204 ? null : r.json();
+}
+
+async function apiDelete(url) {
+  const token = await getToken();
+  const r = await fetch(url, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ── TASKS ──
+async function loadTasks() {
+  document.getElementById('taskList').innerHTML = '<div class="loading"><div class="spinner"></div> Загрузка...</div>';
+  try {
+    const url = `${BASE}/items?$expand=fields&$orderby=fields/DueDate asc&$top=200`;
+    const data = await apiGet(url);
+    allTasks = data.value || [];
+    renderTasks();
+    updateStats();
+  } catch(e) {
+    document.getElementById('taskList').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>Ошибка загрузки:<br>${e.message}</div>`;
+  }
+}
+
+function renderTasks() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allTasks.filter(t => {
+    const f = t.fields || {};
+    const matchFilter = currentFilter === 'Все' || f.Status === currentFilter;
+    const matchSearch = !search || (f.Title || '').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  const list = document.getElementById('taskList');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📭</div>Задач не найдено</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(t => {
+    const f = t.fields || {};
+    const isOverdue = f.DueDate && new Date(f.DueDate) < new Date() && f.Status !== 'Выполнено';
+    const statusClass = f.Status === 'Выполнено' ? 's-done' : f.Status === 'В работе' ? 's-wip' : 's-new';
+    const prioClass = f.Priority === 'Критично' ? 'prio-crit' : f.Priority === 'Высокий' ? 'prio-high' : 'prio-med';
+    const prioTagClass = f.Priority === 'Критично' ? 'prio-crit-tag' : f.Priority === 'Высокий' ? 'prio-high-tag' : '';
+    const due = f.DueDate ? new Date(f.DueDate).toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+
+    return `<div class="task-card ${prioClass} ${isOverdue ? 'overdue' : ''}" onclick="openModal('${t.id}')">
+      <div class="card-top">
+        <div class="card-title">${f.Title || '—'}</div>
+        <span class="status-badge ${statusClass}">${f.Status || 'Новая'}</span>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-left">
+          ${f.Priority ? `<span class="meta-item prio-tag ${prioTagClass}">⚡ ${f.Priority}</span>` : ''}
+          ${due ? `<span class="meta-item">📅 ${due}</span>` : ''}
+        </div>
+        ${isOverdue ? '<span style="color:var(--red);font-size:10px;font-weight:700;">ПРОСРОЧЕНО</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  const now = new Date();
+  document.getElementById('statOverdue').textContent = allTasks.filter(t => t.fields?.DueDate && new Date(t.fields.DueDate) < now && t.fields?.Status !== 'Выполнено').length;
+  document.getElementById('statWip').textContent = allTasks.filter(t => t.fields?.Status === 'В работе').length;
+  document.getElementById('statDone').textContent = allTasks.filter(t => t.fields?.Status === 'Выполнено').length;
+}
+
+function setFilter(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  renderTasks();
+}
+
+// ── MODAL ──
+function openModal(taskId) {
+  const modal = document.getElementById('modalOverlay');
+  modal.classList.add('open');
+
+  if (taskId) {
+    const task = allTasks.find(t => t.id === taskId);
+    const f = task?.fields || {};
+    document.getElementById('modalTitle').textContent = 'Редактировать задачу';
+    document.getElementById('taskId').value = taskId;
+    document.getElementById('fTitle').value = f.Title || '';
+    document.getElementById('fDesc').value = f.Description || '';
+    document.getElementById('fStatus').value = f.Status || 'Новая';
+    document.getElementById('fPriority').value = f.Priority || 'Средний';
+    document.getElementById('fStartDate').value = f.EventDate ? f.EventDate.split('T')[0] : '';
+    document.getElementById('fDueDate').value = f.DueDate ? f.DueDate.split('T')[0] : '';
+    document.getElementById('btnDelete').style.display = 'block';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Новая задача';
+    document.getElementById('taskId').value = '';
+    document.getElementById('fTitle').value = '';
+    document.getElementById('fDesc').value = '';
+    document.getElementById('fStatus').value = 'Новая';
+    document.getElementById('fPriority').value = 'Средний';
+    document.getElementById('fStartDate').value = '';
+    document.getElementById('fDueDate').value = '';
+    document.getElementById('btnDelete').style.display = 'none';
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+async function saveTask() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { showToast('Введите тему обращения', 'error'); return; }
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = 'Сохранение...';
+
+  const fields = {
+    Title: title,
+    Description: document.getElementById('fDesc').value,
+    Status: document.getElementById('fStatus').value,
+    Priority: document.getElementById('fPriority').value,
+  };
+  const startDate = document.getElementById('fStartDate').value;
+  const dueDate = document.getElementById('fDueDate').value;
+  if (startDate) fields.EventDate = new Date(startDate).toISOString();
+  if (dueDate) fields.DueDate = new Date(dueDate).toISOString();
+
+  const taskId = document.getElementById('taskId').value;
+
+  try {
+    if (taskId) {
+      await apiPatch(`${BASE}/items/${taskId}/fields`, fields);
+      showToast('Задача обновлена ✓', 'success');
+    } else {
+      await apiPost(`${BASE}/items`, { fields });
+      showToast('Задача создана ✓', 'success');
+    }
+    closeModal();
+    loadTasks();
+  } catch(e) {
+    showToast('Ошибка: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Сохранить';
+  }
+}
+
+async function deleteTask() {
+  const taskId = document.getElementById('taskId').value;
+  if (!taskId) return;
+  if (!confirm('Удалить задачу?')) return;
+
+  try {
+    await apiDelete(`${BASE}/items/${taskId}`);
+    showToast('Задача удалена', 'success');
+    closeModal();
+    loadTasks();
+  } catch(e) {
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+// ── TOAST ──
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+(async () => {
+  await msalInstance.initialize();
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length) {
+    msalInstance.setActiveAccount(accounts[0]);
+    showApp();
+    loadTasks();
+  }
+})();
+</script>
+</body>
+</html>
